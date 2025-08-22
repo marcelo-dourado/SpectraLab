@@ -1,0 +1,73 @@
+import pandas as pd
+import numpy as np
+import shutil
+import os
+# from core.read_spectrum import ler_espectro
+import streamlit as st
+
+def agrupar_espectros_iguais(arquivos_upload):
+    arquivos = arquivos_upload
+    grouped = {}
+    for arquivo in arquivos:
+        if arquivo.name not in grouped:
+            grouped.update({arquivo.name: arquivo})
+
+    return grouped
+
+def convert2float(dataframe, col):
+    df = dataframe
+    if not df[col].dtype == np.float64:
+        df[col] = [x.replace(',', '.') for x in df[col]]
+
+    df[col] = df[col].astype(float)
+    return df[col]
+
+def adiciona_espectro_session_state(espectro, dataframe_espectro):
+    if not espectro.lower() in st.session_state:
+        st.session_state[f'espectro_{espectro}'] = dataframe_espectro
+    pass
+
+def media_espectros(arquivos_upload):
+    lista_espectros = agrupar_espectros_iguais(arquivos_upload)
+    # OUTPUT_DIR = os.path.join(diretorio_saida, "media_espectros")
+
+    # if not os.path.exists(OUTPUT_DIR):
+    #     os.makedirs(OUTPUT_DIR)
+        
+    for i, espectros in enumerate(lista_espectros):
+        if "branco" not in espectros.lower():
+            df = pd.read_csv(lista_espectros[espectros], delimiter=';', decimal=',', encoding='latin-1').reset_index(drop=True)
+            df = df.drop(0, axis=0)
+            df = df.dropna(axis=1, how='all')
+            for col in df:
+                df[col] = convert2float(df, col)
+            
+            unnamed = [column for column in df.columns if column.startswith('Unnamed')]
+            sample = [column for column in df.columns if not column.startswith('Unnamed')]
+            df_final = pd.concat([df[sample].mean(axis=1), df[unnamed].mean(axis=1)], axis=1).reset_index(drop=True)
+            df_final = df_final.rename(columns={0: "nm", 1: "Abs (mean)"})
+            adiciona_espectro_session_state(espectros, df_final)
+            
+            # df_final.to_csv(os.path.join(OUTPUT_DIR, espectros), index=False, encoding="latin-1", sep=";", decimal=",")
+        else:
+            df = pd.read_csv(lista_espectros[espectros], delimiter=';', decimal=',', encoding='latin-1').reset_index(drop=True)
+            
+            df = df.drop(0, axis=0)
+            df = df.dropna(axis=1, how='all')
+            for col in df:
+                df[col] = convert2float(df, col)
+            
+            unnamed = [column for column in df.columns if column.startswith('Unnamed')]
+            sample = [column for column in df.columns if not column.startswith('Unnamed')]
+
+            df_final = pd.concat([df[sample].mean(axis=1), df[unnamed].std(axis=1)], axis=1).reset_index(drop=True)
+            df_final = df_final.rename(columns={0: "nm", 1: "Abs(std)"})
+            # df_final.to_csv(os.path.join(OUTPUT_DIR, espectros), index=False, encoding="latin-1", sep=";", decimal=",")
+
+if __name__ == "__main__":
+    
+    PATH = r'G:\Meu Drive\CETEM\Paloma\Curva Cyanex 272\arquivos csv'
+    
+    media_espectros(PATH)   
+    print("> Done!")
+    

@@ -23,7 +23,4 @@ Clique no botão **"Processar Dados"** para iniciar a análise. O aplicativo pro
 ### 4. **Visualização dos Resultados**
 
 Os resultados serão exibidos tanto na forma de um gráfico centralizado no pico de análise quanto na forma de uma tabela mostrando o comprimento de onda e a absorbância correspondente. No final da página, haverá um botão para download dos resultados.
-
-
-Quaisquer dúvidas e sugestões de melhorias devem ser enviadas para mdourado@cetem.gov.br.
 '''

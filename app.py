@@ -1,12 +1,11 @@
-from core.readme import readme
-from core.lista_etr import dict_etr_uv
-from core.process_files import extrair_dados
+# from core.lista_etr import dict_etr_uv
+# from core.process_files import extrair_dados
 # from core.get_selected_checkboxes import get_selected_checkboxes
-from core.deletar_chaves import deletar_chaves
+# from core.deletar_chaves import deletar_chaves
 from datetime import datetime
-import pandas as pd
+# import pandas as pd
 import streamlit as st
-import os
+# import os
 
 # Configuração da Página
 st.set_page_config(page_title="Quantificação UV-Vis", layout='wide')

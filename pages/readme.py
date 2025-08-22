@@ -1,3 +1,3 @@
 from core.readme import readme
 
-readme()
+st.write(readme)

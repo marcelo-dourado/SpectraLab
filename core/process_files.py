@@ -1,6 +1,3 @@
-
-from core.read_spectrum import ler_espectro
-from core.filter_signal import filtrar_sinal
 from core.find_abs import achar_abs
 from core.lista_etr import dict_etr_uv
 from core.media_espectros import media_espectros

@@ -9,7 +9,7 @@ import streamlit as st
 import os
 
 # Configuração da Página
-st.set_page_config(page_title="Quantificação UV-Vis")
+st.set_page_config(page_title="Quantificação UV-Vis", layout='wide')
 
 def display_checkboxes(elements):
     """
@@ -50,8 +50,9 @@ def main():
     st.write(f"Última atualização: {datetime.today().strftime('%m/%Y')}")
     st.divider()
 
-    # st.header("Leia-me")
-    # st.write(readme)
+    with st.sidebar:
+        st.title("Menu")
+        # st.write(readme)
     # st.divider()
 
     col1, col2 = st.columns(2)

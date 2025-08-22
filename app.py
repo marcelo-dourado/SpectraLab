@@ -9,7 +9,7 @@ import streamlit as st
 import os
 
 # Configuração da Página
-st.set_page_config(page_title="Quantificação UV-Vis")
+st.set_page_config(page_title="Quantificação UV-Vis", layout='wide')
 
 def display_checkboxes(elements):
     """

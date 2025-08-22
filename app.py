@@ -1,7 +1,7 @@
 from core.readme import readme
 from core.lista_etr import dict_etr_uv
 from core.process_files import extrair_dados
-from core.get_selected_checkboxes import get_selected_checkboxes
+# from core.get_selected_checkboxes import get_selected_checkboxes
 from core.deletar_chaves import deletar_chaves
 from datetime import datetime
 import pandas as pd
@@ -35,6 +35,21 @@ st.title("Análise de Espectros")
 st.write("Desenvolvido por Dourado, M.D.L.")
 st.write(f"Última atualização: {datetime.today().strftime('%m/%Y')}")
 st.divider()
+
+st.sidebar.title("Navegação")
+pagina = st.sidebar.radio("Menu:", ["Instruções", "Sobre", "Serviços", "Equipe", "Contato"])
+
+if pagina == "Instruções":
+    readme
+# elif pagina == "Sobre":
+#     sobre.app()
+# elif pagina == "Serviços":
+#     servicos.app()
+# elif pagina == "Equipe":
+#     equipe.app()
+# elif pagina == "Contato":
+#     contato.app()
+
 
 col1, col2 = st.columns(2)
 with col1:

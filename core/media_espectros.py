@@ -1,8 +1,5 @@
 import pandas as pd
 import numpy as np
-import shutil
-import os
-# from core.read_spectrum import ler_espectro
 import streamlit as st
 
 def agrupar_espectros_iguais(arquivos_upload):

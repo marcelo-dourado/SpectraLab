@@ -30,7 +30,7 @@ paginas = {
 }
 
 pgs = st.navigation(paginas)
-
+pgs.run()
 # col1, col2 = st.columns(2)
 # with col1:
 #     st.header("Upload dos espectros")

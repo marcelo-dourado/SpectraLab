@@ -19,13 +19,13 @@ st.sidebar.title("Menu")
 
 paginas = {
     "Instruções": [
-        st.Page("readme.py", title="Como usar o aplicativo"),
-        st.Page("contato.py", title="Contato"),
+        st.Page("pages/readme.py", title="Como usar o aplicativo"),
+        st.Page("pages/contato.py", title="Contato"),
     ],
     "Análise de espectros": [
-            st.Page("curva_padrao.py", title="Construção de curva padrão"),
-            st.Page("analise_amostras.py", title="Análise de amostras"),
-            st.Page("resultados_excel.py", title="Resultados em Excel"),
+            st.Page("pages/curva_padrao.py", title="Construção de curva padrão"),
+            st.Page("pages/analise_amostras.py", title="Análise de amostras"),
+            st.Page("pages/resultados_excel.py", title="Resultados em Excel"),
         ],
 }
 

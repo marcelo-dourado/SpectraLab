@@ -54,13 +54,15 @@ def main():
     # st.write(readme)
     # st.divider()
 
-    st.header("Upload dos espectros")
-    arquivos_upload = st.file_uploader("Faça o upload de todos os espectros (formato .csv)", accept_multiple_files=True)
-    st.divider()
-    
-    st.header("Selecione os elementos que serão lidos")
-    elements_dict = dict_etr_uv()
-    selected_elements = display_checkboxes(elements_dict)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.header("Upload dos espectros")
+        arquivos_upload = st.file_uploader("Faça o upload de todos os espectros (formato .csv)", accept_multiple_files=True)
+        
+    with col2:
+        st.header("Selecione os elementos que serão lidos")
+        elements_dict = dict_etr_uv()
+        selected_elements = display_checkboxes(elements_dict)
     st.divider()
     
     if st.button("Processar Dados", type='primary'):

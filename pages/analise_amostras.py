@@ -5,6 +5,8 @@ from core.lista_etr import dict_etr_uv
 from core.display_checkboxes import display_checkboxes
 from core.deletar_chaves import deletar_chaves
 
+st.title("Análise de amostras")
+
 col1, col2 = st.columns(2)
 with col1:
     st.header("Upload dos espectros")

@@ -26,11 +26,7 @@ def adiciona_espectro_session_state(espectro, dataframe_espectro):
 
 def media_espectros(arquivos_upload):
     lista_espectros = agrupar_espectros_iguais(arquivos_upload)
-    # OUTPUT_DIR = os.path.join(diretorio_saida, "media_espectros")
 
-    # if not os.path.exists(OUTPUT_DIR):
-    #     os.makedirs(OUTPUT_DIR)
-        
     for i, espectros in enumerate(lista_espectros):
         if "branco" not in espectros.lower():
             df = pd.read_csv(lista_espectros[espectros], delimiter=';', decimal=',', encoding='latin-1').reset_index(drop=True)
@@ -44,8 +40,7 @@ def media_espectros(arquivos_upload):
             df_final = pd.concat([df[sample].mean(axis=1), df[unnamed].mean(axis=1)], axis=1).reset_index(drop=True)
             df_final = df_final.rename(columns={0: "nm", 1: "Abs (mean)"})
             adiciona_espectro_session_state(espectros, df_final)
-            
-            # df_final.to_csv(os.path.join(OUTPUT_DIR, espectros), index=False, encoding="latin-1", sep=";", decimal=",")
+
         else:
             df = pd.read_csv(lista_espectros[espectros], delimiter=';', decimal=',', encoding='latin-1').reset_index(drop=True)
             
@@ -60,11 +55,4 @@ def media_espectros(arquivos_upload):
             df_final = pd.concat([df[sample].mean(axis=1), df[unnamed].std(axis=1)], axis=1).reset_index(drop=True)
             df_final = df_final.rename(columns={0: "nm", 1: "Abs(std)"})
             # df_final.to_csv(os.path.join(OUTPUT_DIR, espectros), index=False, encoding="latin-1", sep=";", decimal=",")
-
-if __name__ == "__main__":
-    
-    PATH = r'G:\Meu Drive\CETEM\Paloma\Curva Cyanex 272\arquivos csv'
-    
-    media_espectros(PATH)   
-    print("> Done!")
     

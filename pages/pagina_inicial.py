@@ -1,6 +1,6 @@
 import streamlit as st
 
-usuario = "Fulano"
+usuario = ""
 
 st.title("SpectraLab")
 

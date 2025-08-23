@@ -13,7 +13,6 @@ paginas = {
     "Análise de espectros": [
         st.Page("pages/curva_padrao.py", title="Construção de curva padrão"),
         st.Page("pages/analise_amostras.py", title="Análise de amostras"),
-        st.Page("pages/resultados_excel.py", title="Resultados em Excel"),
         ],
 }
 

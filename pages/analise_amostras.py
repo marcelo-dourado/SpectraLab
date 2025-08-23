@@ -43,6 +43,8 @@ else:
                 
                 data_hoje = datetime.today().strftime(r"%Y%m%d")
                 st.dataframe(df_resultado)
+                
+                st.session_state["df_resultados_amostras"] = df_resultado
                 # OUTPUT_NAME = f"{data_hoje} - Espectros UV-Vis processados.csv"
                 # st.download_button(label="Download", file_name=OUTPUT_NAME, data=df_resultado.to_csv(encoding='latin-1', index=False))
                 arquivos_session_state = [espectro for espectro in st.session_state if "espectro" in espectro]

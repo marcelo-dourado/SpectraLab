@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 from core.curva_padrao import construir_curva_padrao
 from core.lista_etr import dict_etr_uv
 from core.construir_regressao_linear import construir_regressao_linear
@@ -35,6 +36,7 @@ for i, col in enumerate(cols):
                 concentracoes[elemento] = concentracoes_padrao_elemento
 
 if concentracoes:
+    df_curva_padrao = pd.DataFrame([], columns=["Elemento", "Pico", "Absorbância", "Arquivo", "Concentração (g/L)"])
     botao_construir_curva = st.button("Construir curva padrão", type='primary')
 
     if botao_construir_curva:
@@ -44,28 +46,31 @@ if concentracoes:
             string_curva_elemento_session_state = f"curva_padrao_{elemento}"
             
             curva_elemento = construir_curva_padrao(arquivos_upload[elemento], {elemento: dict_etr_uv()[elemento]}, mostrar_grafico, pagina='curva')
-            curva_elemento.loc[len(curva_elemento)] = [elemento, 445, 0, 'Adição automática do ponto (0, 0)']
+            curva_elemento.loc[len(curva_elemento)] = [elemento, dict_etr_uv()[elemento], 0, 'Adição automática do ponto (0, 0)']
             curva_elemento = curva_elemento.sort_values("Absorbância").reset_index(drop=True)
             curva_elemento["Concentração (g/L)"] = concentracoes[elemento]
-            
+            # st.write(curva_elemento.to_dict())
             st.header(f"Resultados curva padrão - {elemento}")
-            st.write("### Tabela de dados")
-            st.dataframe(curva_elemento)
+            # st.write("### Tabela de dados")
+            # st.dataframe(curva_elemento)
 
-            st.write("### Resultados da regressão")
+            # st.write("### Resultados da regressão")
             modelo_elemento, r2_elemento = construir_regressao_linear(curva_elemento)
-            st.write(f"A = {modelo_elemento.coef_[0]:0.4f}·[{elemento}]")
-            st.write(f"R² = {r2_elemento:0.2%}")
+            # st.write(f"A = {modelo_elemento.coef_[0]:0.4f}·[{elemento}]")
+            # st.write(f"R² = {r2_elemento:0.2%}")
             
-            st.write("### Gráfico da curva padrão")
+            # st.write("### Gráfico da curva padrão")
+            
             fig = construir_grafico_curva_padrao(curva_elemento, modelo_elemento, r2_elemento)
             st.pyplot(fig)
             
+            df_curva_padrao = pd.concat([df_curva_padrao, curva_elemento], ignore_index=True)
+            
             if not string_curva_elemento_session_state in st.session_state:
                 st.session_state[string_curva_elemento_session_state] = modelo_elemento
-                
+         
         st.success(f"Equações de absorbância foram salvas na sua atual sessão.")
-    
+        st.dataframe(df_curva_padrao)
     for key in st.session_state:
         if key.startswith("espectro"):
             deletar_chaves(st.session_state, key)

@@ -6,13 +6,12 @@ import pandas as pd
 
 def extrair_dados(arquivos_upload, dict_elementos, mostrar_grafico: bool, pagina):
     media_espectros(arquivos_upload)
-
     dict_picos = dict_etr_uv()
    
     dados = []
     if pagina == 'curva':
         for elemento in dict_elementos:
-            arquivos = [espectro for espectro in st.session_state if f"espectro_{elemento}" in espectro]
+            arquivos = [espectro for espectro in st.session_state if f"espectro_" in espectro]
             for arquivo in sorted(arquivos):
                 df = st.session_state[arquivo]
             

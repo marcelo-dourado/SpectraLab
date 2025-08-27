@@ -44,10 +44,10 @@ if concentracoes:
         
         for elemento in arquivos_upload:
             string_curva_elemento_session_state = f"curva_padrao_{elemento}"
-            
             curva_elemento = construir_curva_padrao(arquivos_upload[elemento], {elemento: dict_etr_uv()[elemento]}, mostrar_grafico, pagina='curva')
             curva_elemento.loc[len(curva_elemento)] = [elemento, dict_etr_uv()[elemento], 0, 'Adição automática do ponto (0, 0)']
             curva_elemento = curva_elemento.sort_values("Absorbância").reset_index(drop=True)
+            # st.dataframe(curva_elemento)
             curva_elemento["Concentração (g/L)"] = concentracoes[elemento]
             # st.write(curva_elemento.to_dict())
             st.header(f"Resultados curva padrão - {elemento}")

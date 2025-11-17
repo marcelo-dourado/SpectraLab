@@ -37,8 +37,8 @@ if st.button("Processar Dados", type='primary'):
             
             elementos_lidos = df_resultado["Elemento"].unique()
             
-            # for elemento_lido in elementos_lidos:
-            #     df_resultado.loc[df_resultado["Elemento"] == elemento_lido, "Concentração (g/L)"] = df_resultado["Absorbância"] / st.session_state.get(f"curva_padrao_{elemento_lido}").coef_[0]
+            for elemento_lido in elementos_lidos:
+                df_resultado.loc[df_resultado["Elemento"] == elemento_lido, "Concentração (g/L)"] = df_resultado["Absorbância"] / st.session_state.get(f"curva_padrao_{elemento_lido}").coef_[0]
             
             data_hoje = datetime.today().strftime(r"%Y%m%d")
             
@@ -46,6 +46,7 @@ if st.button("Processar Dados", type='primary'):
             # OUTPUT_NAME = f"{data_hoje} - Espectros UV-Vis processados.csv"
             # st.download_button(label="Download", file_name=OUTPUT_NAME, data=df_resultado.to_csv(encoding='latin-1', index=False))
             arquivos_session_state = [espectro for espectro in st.session_state if "espectro" in espectro]
+            st.dataframe(df_resultado)
             for f in arquivos_session_state:
                 deletar_chaves(st.session_state, f)
         except Exception as e:

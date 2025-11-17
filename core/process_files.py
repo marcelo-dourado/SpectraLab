@@ -23,6 +23,7 @@ def extrair_dados(arquivos_upload, dict_elementos, mostrar_grafico: bool, pagina
             arquivos = [espectro for espectro in st.session_state if f"espectro_" in espectro]
             for arquivo in sorted(arquivos):
                 df = st.session_state[arquivo]
+                st.write(arquivo)
                 absorbancia = achar_abs(df, dict_elementos[elemento], grafico=mostrar_grafico)
                 dados.append([elemento, dict_picos[elemento], absorbancia, arquivo[9:]])
 

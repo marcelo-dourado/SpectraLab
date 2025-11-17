@@ -13,6 +13,7 @@ def agrupar_espectros_iguais(arquivos_upload):
 
 def convert2float(dataframe, col):
     df = dataframe
+    st.write(df)
     if not df[col].dtype == np.float64:
         df[col] = [x.replace(',', '.') for x in df[col]]
 

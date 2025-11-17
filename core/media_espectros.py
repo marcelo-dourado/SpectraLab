@@ -13,8 +13,6 @@ def agrupar_espectros_iguais(arquivos_upload):
 
 def convert2float(dataframe, col):
     df = dataframe
-    st.write(df)
-    print(df.info)
     if not df[col].dtype == np.float64:
         df[col] = [x.replace(',', '.') for x in df[col]]
 
@@ -34,6 +32,7 @@ def media_espectros(arquivos_upload):
             df = pd.read_csv(lista_espectros[espectros], delimiter=';', decimal=',', encoding='latin-1').reset_index(drop=True)
             df = df.drop(0, axis=0)
             df = df.dropna(axis=1, how='all')
+            st.write(df.info())
             for col in df:
                 df[col] = convert2float(df, col)
             

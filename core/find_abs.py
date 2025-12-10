@@ -19,7 +19,7 @@ def achar_abs(dataframe, pico, grafico=True):
         fig, ax = plt.subplots()
 
         sns.lineplot(x=dataframe_processado.columns[0], y=dataframe_processado.columns[-1], data=dataframe_processado)
-        ax.set_ylim(0, 2)
+        ax.set_ylim(-0.01, 2.0)
 
         st.pyplot(fig)
         # st.line_chart(data=dataframe_processado, x=dataframe_processado.columns[0], y=dataframe_processado.columns[-1], y_label="Absorbância")

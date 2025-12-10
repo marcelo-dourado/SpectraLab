@@ -9,7 +9,7 @@ def achar_abs(dataframe, pico, grafico=True):
     # dataframe[dataframe.columns[2]] = dataframe[dataframe.columns[2]]
     
     indice_pico = dataframe.loc[dataframe[dataframe.columns[0]] == pico].index[0]
-    intervalo_dados = 40
+    intervalo_dados = 20
     
     dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados])
 
@@ -19,7 +19,7 @@ def achar_abs(dataframe, pico, grafico=True):
         fig, ax = plt.subplots()
 
         sns.lineplot(x=dataframe_processado.columns[0], y=dataframe_processado.columns[-1], data=dataframe_processado)
-        ax.set_ylim(0, 2)
+        ax.set_ylim(-0.01, 1.50)
 
         st.pyplot(fig)
         # st.line_chart(data=dataframe_processado, x=dataframe_processado.columns[0], y=dataframe_processado.columns[-1], y_label="Absorbância")

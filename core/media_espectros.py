@@ -32,6 +32,7 @@ def media_espectros(arquivos_upload):
             df = pd.read_csv(lista_espectros[espectros], delimiter=';', decimal=',', encoding='latin-1', on_bad_lines='skip', lineterminator='\n').reset_index(drop=True)
             df = df.drop(0, axis=0)
             df = df.dropna(axis=1, how='all')
+            st.write(df)
             for col in df:
                 df[col] = convert2float(df, col)
             

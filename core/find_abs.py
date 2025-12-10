@@ -9,7 +9,7 @@ def achar_abs(dataframe, pico, grafico=True):
     # dataframe[dataframe.columns[2]] = dataframe[dataframe.columns[2]]
     
     indice_pico = dataframe.loc[dataframe[dataframe.columns[0]] == pico].index[0]
-    intervalo_dados = 40
+    intervalo_dados = 20
     
     dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados])
 

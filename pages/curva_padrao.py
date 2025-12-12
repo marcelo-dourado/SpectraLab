@@ -62,6 +62,7 @@ if concentracoes:
             # st.write("### Gráfico da curva padrão")
             
             fig = construir_grafico_curva_padrao(curva_elemento, modelo_elemento, r2_elemento)
+            st.write(arquivos_upload[elemento])
             st.pyplot(fig)
             
             df_curva_padrao = pd.concat([df_curva_padrao, curva_elemento], ignore_index=True)

@@ -2,6 +2,7 @@ from core.filter_signal import filtrar_sinal
 import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 def achar_abs(dataframe, pico, grafico=True):
     dataframe[dataframe.columns[0]] = round(dataframe[dataframe.columns[0]], 0)
@@ -9,18 +10,23 @@ def achar_abs(dataframe, pico, grafico=True):
     # dataframe[dataframe.columns[2]] = dataframe[dataframe.columns[2]]
     
     indice_pico = dataframe.loc[dataframe[dataframe.columns[0]] == pico].index[0]
-    intervalo_dados = 20
-    
-    dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados])
+    if pico == 296:
+        # Esse é o intervalo de dados para o Ce
+        dataframe_processado = filtrar_sinal(dataframe[indice_pico-24:indice_pico+12])
+    else:
+        intervalo_dados = 20
+        dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados])
 
     absorbancia = dataframe_processado.loc[dataframe_processado[dataframe_processado.columns[0]] == pico][dataframe_processado.columns[-1]].values[0]
     
     if grafico:
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(20, 20), dpi=1200)
 
         sns.lineplot(x=dataframe_processado.columns[0], y=dataframe_processado.columns[-1], data=dataframe_processado)
-        ax.set_ylim(-0.01, 1.50)
-
+        # ax.set_xlim(275,350)
+        # ax.set_xticks(np.linspace(275, 350, 38), np.linspace(275, 350, 38, dtype='int'))
+        # ax.set_ylim(-0.01, 2)
+        ax.grid()
         st.pyplot(fig)
         # st.line_chart(data=dataframe_processado, x=dataframe_processado.columns[0], y=dataframe_processado.columns[-1], y_label="Absorbância")
     

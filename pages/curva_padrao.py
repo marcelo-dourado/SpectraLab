@@ -42,8 +42,9 @@ if concentracoes:
     if botao_construir_curva:
         arquivos_upload = {key.split("_")[1]: val for key, val in st.session_state.items() if key.startswith("upload")}
         
-        for elemento in arquivos_upload:
+        for ii, elemento in enumerate(arquivos_upload):
             string_curva_elemento_session_state = f"curva_padrao_{elemento}"
+            st.write(arquivos_upload[elemento][ii].name)
             curva_elemento = construir_curva_padrao(arquivos_upload[elemento], {elemento: dict_etr_uv()[elemento]}, mostrar_grafico, pagina='curva')
             curva_elemento.loc[len(curva_elemento)] = [elemento, dict_etr_uv()[elemento], 0, 'Adição automática do ponto (0, 0)']
             curva_elemento = curva_elemento.sort_values("Absorbância").reset_index(drop=True)
@@ -62,7 +63,6 @@ if concentracoes:
             # st.write("### Gráfico da curva padrão")
             
             fig = construir_grafico_curva_padrao(curva_elemento, modelo_elemento, r2_elemento)
-            st.write(arquivos_upload[elemento])
             st.pyplot(fig)
             
             df_curva_padrao = pd.concat([df_curva_padrao, curva_elemento], ignore_index=True)

@@ -14,8 +14,9 @@ def achar_abs(dataframe, pico, grafico=True):
         # Esse é o intervalo de dados para o Ce
         dataframe_processado = filtrar_sinal(dataframe[indice_pico-24:indice_pico+12])
     else:
-        intervalo_dados = 40
-        dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados])
+        intervalo_dados = 50
+        # dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados])
+        dataframe_processado = filtrar_sinal(dataframe[indice_pico-intervalo_dados:indice_pico+intervalo_dados], pico_elemento=pico)
 
     absorbancia = dataframe_processado.loc[dataframe_processado[dataframe_processado.columns[0]] == pico][dataframe_processado.columns[-1]].values[0]
     

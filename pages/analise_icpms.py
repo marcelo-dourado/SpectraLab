@@ -26,7 +26,7 @@ uploaded_file = st.file_uploader("Escolha o arquivo CSV", type=["csv"])
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, sep=',', decimal='.')
     st.divider()
-    st.dataframe(df)
+    # st.dataframe(df)
     # 1. Tratamento numérico das colunas
     for col in ['Concentration', 'Mass']:
         if col in df.columns:

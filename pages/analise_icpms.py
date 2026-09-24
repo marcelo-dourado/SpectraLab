@@ -24,9 +24,9 @@ st.markdown("Filtro global por modo de leitura. As colunas e os filtros seguem a
 uploaded_file = st.file_uploader("Escolha o arquivo CSV", type=["csv"])
 
 if uploaded_file is not None:
-    df = pd.read_csv(uploaded_file, sep=';')
+    df = pd.read_csv(uploaded_file, sep=',', decimal='.')
     st.divider()
-    
+    st.dataframe(df)
     # 1. Tratamento numérico das colunas
     for col in ['Concentration', 'Mass']:
         if col in df.columns:

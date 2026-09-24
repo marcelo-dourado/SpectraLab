@@ -10,10 +10,13 @@ paginas = {
         st.Page("pages/readme.py", title="Como usar o aplicativo"),
         st.Page("pages/contato.py", title="Contato"),
     ],
-    "Análise de espectros": [
+    "Análise de espectros UV-Vis": [
         st.Page("pages/curva_padrao.py", title="Construção de curva padrão"),
         st.Page("pages/analise_amostras.py", title="Análise de amostras"),
         ],
+    "ICP-MS": [
+            st.Page("pages/analise_icpms.py", title="Análise de dados"),
+            ],
 }
 
 pgs = st.navigation(paginas)

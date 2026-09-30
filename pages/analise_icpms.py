@@ -1,18 +1,7 @@
 import streamlit as st
 import pandas as pd
-
-# Lista sequencial da Tabela Periódica (Número Atômico 1 ao 92) para ordenação correta das colunas e filtros
-ORDEM_TABELA_PERIODICA = [
-    'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne',
-    'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar',
-    'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',
-    'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe',
-    'Cs', 'Ba', 
-    'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', # Lantanídeos
-    'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
-    'Fr', 'Ra', 
-    'Ac', 'Th', 'Pa', 'U' # Actinídeos até o Urânio
-]
+import numpy as np
+from core.ordem_tabela_periodica import ORDEM_TABELA_PERIODICA
 
 # Configuração inicial da página
 st.set_page_config(page_title="ICP-MS Tabela de Concentrações", layout="wide")
@@ -23,10 +12,21 @@ st.markdown("Filtro global por modo de leitura. As colunas e os filtros seguem a
 # Área de Upload
 uploaded_file = st.file_uploader("Escolha o arquivo CSV", type=["csv"])
 
+# Área de seleção do TUNE MODE
+numero_gases = st.selectbox("Selecione a quantidade de Tune Mode", options=np.linspace(1, 5, 5, dtype='int'))
+
+cols = st.columns(numero_gases)
+tune_modes = []
+opcoes_tune_modes = ["No Gas", "He", "O2", "HHe", "NH3"]
+
+for i, col in enumerate(cols):
+    with cols[i]:
+        tune_modes.append(st.selectbox(f"Selecione o Tune Modes #{i+1}", options=opcoes_tune_modes))
+
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, sep=',', decimal='.')
     st.divider()
-    # st.dataframe(df)
+    
     # 1. Tratamento numérico das colunas
     for col in ['Concentration', 'Mass']:
         if col in df.columns:
@@ -39,10 +39,10 @@ if uploaded_file is not None:
         df = df.loc[df["Data File Name"].astype(str).str.contains("SMPL", na=False)]
 
     # 3. Identificação automática do modo 
-    min_mass_dict = df.groupby('Analyte')['Mass'].min().to_dict()
+    min_mass_dict = df.groupby(['Analyte', 'Tune Step'])['Mass'].min().to_dict()
     
     def classificar_modo(row):
-        min_m = min_mass_dict.get(row['Analyte'], 0)
+        min_m = min_mass_dict.get((row['Analyte'], row['Tune Step']), 0)
         if row['Mass'] >= min_m + 15:
             return "MASS-SHIFT"
         else:
@@ -60,7 +60,7 @@ if uploaded_file is not None:
         modos_disponiveis = sorted(df['Modo'].dropna().unique())
         selected_mode = st.selectbox("Modo de Leitura", modos_disponiveis)
         
-        # Extrai os elementos únicos e ordena pela Tabela Periódica (para o filtro ao lado)
+        # Extrai os elementos únicos e ordena pela Tabela Periódica
         analytes_unicos = df['Analyte'].dropna().unique().tolist()
         analytes_disponiveis = sorted(
             analytes_unicos, 
@@ -75,7 +75,7 @@ if uploaded_file is not None:
         )
 
     # ==========================
-    # PROCESSAMENTO DA TABELA
+    # PROCESSAMENTO DA TABELA POR TUNE STEP
     # ==========================
     
     df_filtered = df[df['Modo'] == selected_mode].copy()
@@ -90,53 +90,68 @@ if uploaded_file is not None:
             axis=1
         )
         
-        # Criação da Pivot Table
-        pivot_df = df_filtered.pivot_table(
-            index='Sample Name',
-            columns='Analyte_Mass',
-            values='Concentration',
-            aggfunc='mean'
-        ).reset_index()
+        # Identificar os Tune Steps únicos no arquivo (ex: 1.0, 2.0, 3.0)
+        tune_steps_presentes = sorted(df_filtered['Tune Step'].dropna().unique())
         
-        pivot_df.columns.name = None 
-        
-        # ==========================================
-        # ORDENAÇÃO DAS COLUNAS PELA TABELA PERIÓDICA
-        # ==========================================
-        
-        # Separa a coluna das amostras do resto para não tentar ordená-la quimicamente
-        colunas_elementos = [col for col in pivot_df.columns if col != 'Sample Name']
-        
-        def extrair_simbolo(col_name):
-            # Exemplo de conversão: "Sm (149)" vira "Sm"
-            return col_name.split(" ")[0]
+        # Iterar sobre cada Tune Step para gerar tabelas separadas
+        for step in tune_steps_presentes:
+            # Pega o nome do gás escolhido pelo usuário (assume que Step 1 = índice 0, etc.)
+            idx_nome = int(step) - 1
+            if idx_nome < len(tune_modes):
+                nome_tune = tune_modes[idx_nome]
+            else:
+                nome_tune = f"Tune Step {int(step)}"
+                
+            df_step = df_filtered[df_filtered['Tune Step'] == step]
             
-        def obter_indice_periodico(col_name):
-            simbolo = extrair_simbolo(col_name)
-            # Se o símbolo estiver na lista, retorna o índice (Número Atômico). Se não, joga para o fim (999).
-            if simbolo in ORDEM_TABELA_PERIODICA:
-                return ORDEM_TABELA_PERIODICA.index(simbolo)
-            return 999
-            
-        # Ordena as colunas químicas com base no índice da Tabela Periódica
-        colunas_ordenadas_quimicamente = sorted(colunas_elementos, key=obter_indice_periodico)
-        
-        # Remonta o DataFrame garantindo o 'Sample Name' primeiro
-        colunas_finais = ['Sample Name'] + colunas_ordenadas_quimicamente
-        pivot_df = pivot_df[colunas_finais]
-        
-        # ==========================================
+            if df_step.empty:
+                continue
 
-        st.subheader(f"Resultados de Concentração - Modo: {selected_mode}")
-        
-        st.dataframe(pivot_df, use_container_width=True)
-        
-        csv_export = pivot_df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
-        st.download_button(
-            label="📥 Baixar Tabela como CSV",
-            data=csv_export,
-            file_name=f"Resultados_{selected_mode}.csv",
-            mime="text/csv",
-        )
+            # Criação da Pivot Table para este Tune Step específico
+            pivot_df = df_step.pivot_table(
+                index='Sample Name',
+                columns='Analyte_Mass',
+                values='Concentration',
+                aggfunc='mean'
+            ).reset_index()
+            
+            pivot_df.columns.name = None 
+            
+            # ==========================================
+            # ORDENAÇÃO DAS COLUNAS PELA TABELA PERIÓDICA
+            # ==========================================
+            colunas_elementos = [col for col in pivot_df.columns if col != 'Sample Name']
+            
+            def extrair_simbolo(col_name):
+                return col_name.split(" ")[0]
+                
+            def obter_indice_periodico(col_name):
+                simbolo = extrair_simbolo(col_name)
+                if simbolo in ORDEM_TABELA_PERIODICA:
+                    return ORDEM_TABELA_PERIODICA.index(simbolo)
+                return 999
+                
+            colunas_ordenadas_quimicamente = sorted(colunas_elementos, key=obter_indice_periodico)
+            colunas_finais = ['Sample Name'] + colunas_ordenadas_quimicamente
+            pivot_df = pivot_df[colunas_finais]
+            
+            # ==========================================
+            
+            # Exibe a tabela e o botão com identificações únicas
+            st.subheader(f"Resultados - {nome_tune} (Tune Step {int(step)}) | Modo: {selected_mode}")
+            
+            st.dataframe(pivot_df, use_container_width=True)
+            
+            csv_export = pivot_df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
+            st.download_button(
+                label=f"📥 Baixar Tabela ({nome_tune}) como CSV",
+                data=csv_export,
+                file_name=f"Resultados_{nome_tune}_{selected_mode}.csv",
+                mime="text/csv",
+                key=f"download_btn_step_{int(step)}_{selected_mode}" # CHAVE ÚNICA OBRIGATÓRIA
+            )
+            
+            st.divider() # Adiciona uma linha de separação entre as tabelas
+            
     else:
         st.warning("Nenhum dado encontrado para os filtros selecionados.")

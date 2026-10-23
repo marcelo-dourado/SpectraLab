@@ -156,9 +156,202 @@
 #     else:
 #         st.warning("Nenhum dado encontrado para os filtros selecionados.")
 
+# import streamlit as st
+# import pandas as pd
+# import numpy as np
+# from core.ordem_tabela_periodica import ORDEM_TABELA_PERIODICA
+# from molmass import ELEMENTS
+
+# # Configuração inicial da página
+# st.set_page_config(page_title="ICP-MS Tabela de Concentrações", layout="wide")
+
+# st.title("Tabela de concentrações por amostra e modo de leitura")
+# st.markdown("Filtro global por modo de leitura. As colunas e os filtros seguem a Tabela Periódica.")
+
+# # Área de Upload (agora é a primeira e única ação inicial)
+# uploaded_file = st.file_uploader("Escolha o arquivo CSV (PCLIMS)", type=["csv"])
+
+# if uploaded_file is not None:
+#     # Salva o nome original do arquivo removendo a extensão (.csv)
+#     original_name = uploaded_file.name.rsplit('.', 1)[0]
+    
+#     df = pd.read_csv(uploaded_file, sep=',', decimal='.')
+#     st.divider()
+    
+#     # 1. Tratamento numérico das colunas
+#     for col in ['Concentration', 'Mass']:
+#         if col in df.columns:
+#             if df[col].dtype == 'object':
+#                 df[col] = df[col].astype(str).str.replace(',', '.')
+#             df[col] = pd.to_numeric(df[col], errors='coerce')
+
+#     # 2. Identificação de somente amostras
+#     if "Data File Name" in df.columns:
+#         df = df.loc[df["Data File Name"].astype(str).str.contains("SMPL", na=False)]
+
+#     # ==========================
+#     # DETECÇÃO AUTOMÁTICA DOS TUNE MODES
+#     # ==========================
+#     # O programa lê o arquivo e descobre automaticamente quais Tune Steps existem
+#     tune_steps_presentes = sorted(df['Tune Step'].dropna().unique())
+    
+#     st.subheader("Mapeamento de Gases (Tune Steps)")
+#     st.markdown("O sistema detectou automaticamente os seguintes modos de leitura. Defina o gás de cada um:")
+    
+#     # Cria a quantidade exata de colunas baseada nos passos encontrados no arquivo
+#     cols = st.columns(len(tune_steps_presentes))
+#     tune_modes = []
+#     opcoes_tune_modes = ["No Gas", "He", "O2", "HHe", "NH3"]
+
+#     for i, step in enumerate(tune_steps_presentes):
+#         with cols[i]:
+#             # O usuário escolhe o gás para cada passo detectado
+#             escolha = st.selectbox(f"Gás para o Tune Step {int(step)}", options=opcoes_tune_modes, key=f"tune_gas_{int(step)}")
+#             tune_modes.append(escolha)
+            
+#     st.divider()
+
+#     # ==========================
+#     # 3. Identificação química precisa do modo ON MASS / MASS-SHIFT
+#     # ==========================
+    
+#     # Cria um dicionário mapeando cada Tune Step (ex: 1.0, 2.0) para o gás selecionado
+#     step_to_gas = {step: tune_modes[i] for i, step in enumerate(tune_steps_presentes)}
+    
+#     def classificar_modo(row):
+#         analito = row['Analyte']
+#         massa_medida = int(row['Mass'])
+#         tune_step = row['Tune Step']
+        
+#         # Identifica o gás usado na linha atual
+#         gas_utilizado = step_to_gas.get(tune_step, "No Gas")
+        
+#         # Se não for gás reativo, é ON MASS por definição do método
+#         if gas_utilizado not in ["O2", "NH3"]:
+#             return "ON MASS"
+        
+#         # Se for gás reativo, fazemos a verificação isotópica real
+#         try:
+#             isotopos_naturais = list(ELEMENTS[analito].isotopes.keys())
+            
+#             if massa_medida in isotopos_naturais:
+#                 return "ON MASS"
+#             else:
+#                 return "MASS-SHIFT"
+                
+#         except KeyError:
+#             return "DESCONHECIDO"
+            
+#     df['Modo'] = df.apply(classificar_modo, axis=1)
+
+#     # ==========================
+#     # FILTROS PRINCIPAIS
+#     # ==========================
+#     st.write("# Resultados")
+    
+#     col1, col2 = st.columns(2)
+    
+#     with col1:
+#         modos_disponiveis = sorted(df['Modo'].dropna().unique())
+#         selected_mode = st.selectbox("Modo de Leitura", modos_disponiveis)
+        
+#         # Extrai os elementos únicos e ordena pela Tabela Periódica
+#         analytes_unicos = df['Analyte'].dropna().unique().tolist()
+#         analytes_disponiveis = sorted(
+#             analytes_unicos, 
+#             key=lambda x: ORDEM_TABELA_PERIODICA.index(x) if x in ORDEM_TABELA_PERIODICA else 999
+#         )
+    
+#     with col2:
+#         istd_selecionado = st.multiselect(
+#             "Remover Elemento(s) ISTD das Colunas", 
+#             options=analytes_disponiveis,
+#             default=['Hf'] if 'Hf' in analytes_disponiveis else [] 
+#         )
+
+#     # ==========================
+#     # PROCESSAMENTO DA TABELA POR TUNE STEP
+#     # ==========================
+    
+#     df_filtered = df[df['Modo'] == selected_mode].copy()
+    
+#     if istd_selecionado:
+#         df_filtered = df_filtered[~df_filtered['Analyte'].isin(istd_selecionado)]
+        
+#     if not df_filtered.empty:
+#         # Coluna combinada (Símbolo + Massa)
+#         df_filtered['Analyte_Mass'] = df_filtered.apply(
+#             lambda x: f"{x['Analyte']} ({int(x['Mass'])})" if pd.notnull(x['Mass']) else x['Analyte'], 
+#             axis=1
+#         )
+        
+#         # Iterar sobre cada Tune Step detectado para gerar tabelas separadas
+#         for i, step in enumerate(tune_steps_presentes):
+#             # O nome do gás que o usuário selecionou lá em cima
+#             nome_tune = tune_modes[i]
+                
+#             df_step = df_filtered[df_filtered['Tune Step'] == step]
+            
+#             if df_step.empty:
+#                 continue
+
+#             # Criação da Pivot Table para este Tune Step específico
+#             pivot_df = df_step.pivot_table(
+#                 index='Sample Name',
+#                 columns='Analyte_Mass',
+#                 values='Concentration',
+#                 aggfunc='mean'
+#             ).reset_index()
+            
+#             pivot_df.columns.name = None 
+            
+#             # ==========================================
+#             # ORDENAÇÃO DAS COLUNAS PELA TABELA PERIÓDICA
+#             # ==========================================
+#             colunas_elementos = [col for col in pivot_df.columns if col != 'Sample Name']
+            
+#             def extrair_simbolo(col_name):
+#                 return col_name.split(" ")[0]
+                
+#             def obter_indice_periodico(col_name):
+#                 simbolo = extrair_simbolo(col_name)
+#                 if simbolo in ORDEM_TABELA_PERIODICA:
+#                     return ORDEM_TABELA_PERIODICA.index(simbolo)
+#                 return 999
+                
+#             colunas_ordenadas_quimicamente = sorted(colunas_elementos, key=obter_indice_periodico)
+#             colunas_finais = ['Sample Name'] + colunas_ordenadas_quimicamente
+#             pivot_df = pivot_df[colunas_finais]
+            
+#             # ==========================================
+            
+#             # Exibe a tabela e o botão com identificações únicas
+#             st.write(f"## {nome_tune} (Tune Step {int(step)}) | Modo: {selected_mode}")
+            
+#             st.dataframe(pivot_df, use_container_width=True)
+            
+#             # Nome do arquivo customizado: NomeOriginal_Gás_Modo.csv
+#             nome_arquivo_exportacao = f"{original_name}_{nome_tune}_{selected_mode}.csv"
+            
+#             csv_export = pivot_df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
+#             st.download_button(
+#                 label=f"📥 Baixar Tabela ({nome_tune})",
+#                 data=csv_export,
+#                 file_name=nome_arquivo_exportacao,
+#                 mime="text/csv",
+#                 key=f"download_btn_step_{int(step)}_{selected_mode}" 
+#             )
+            
+#             st.divider() 
+            
+#     else:
+#         st.warning("Nenhum dado encontrado para os filtros selecionados.")
+
 import streamlit as st
 import pandas as pd
 import numpy as np
+import io  # Necessário para salvar o Excel na memória
+from molmass import ELEMENTS
 from core.ordem_tabela_periodica import ORDEM_TABELA_PERIODICA
 
 # Configuração inicial da página
@@ -167,11 +360,10 @@ st.set_page_config(page_title="ICP-MS Tabela de Concentrações", layout="wide")
 st.title("Tabela de concentrações por amostra e modo de leitura")
 st.markdown("Filtro global por modo de leitura. As colunas e os filtros seguem a Tabela Periódica.")
 
-# Área de Upload (agora é a primeira e única ação inicial)
+# Área de Upload
 uploaded_file = st.file_uploader("Escolha o arquivo CSV (PCLIMS)", type=["csv"])
 
 if uploaded_file is not None:
-    # Salva o nome original do arquivo removendo a extensão (.csv)
     original_name = uploaded_file.name.rsplit('.', 1)[0]
     
     df = pd.read_csv(uploaded_file, sep=',', decimal='.')
@@ -191,49 +383,56 @@ if uploaded_file is not None:
     # ==========================
     # DETECÇÃO AUTOMÁTICA DOS TUNE MODES
     # ==========================
-    # O programa lê o arquivo e descobre automaticamente quais Tune Steps existem
     tune_steps_presentes = sorted(df['Tune Step'].dropna().unique())
     
     st.subheader("Mapeamento de Gases (Tune Steps)")
     st.markdown("O sistema detectou automaticamente os seguintes modos de leitura. Defina o gás de cada um:")
     
-    # Cria a quantidade exata de colunas baseada nos passos encontrados no arquivo
-    cols = st.columns(len(tune_steps_presentes))
+    cols_gases = st.columns(len(tune_steps_presentes))
     tune_modes = []
     opcoes_tune_modes = ["No Gas", "He", "O2", "HHe", "NH3"]
 
     for i, step in enumerate(tune_steps_presentes):
-        with cols[i]:
-            # O usuário escolhe o gás para cada passo detectado
+        with cols_gases[i]:
             escolha = st.selectbox(f"Gás para o Tune Step {int(step)}", options=opcoes_tune_modes, key=f"tune_gas_{int(step)}")
             tune_modes.append(escolha)
             
     st.divider()
 
-    # 3. Identificação automática do modo ON MASS / MASS-SHIFT
-    min_mass_dict = df.groupby('Analyte')['Mass'].min().to_dict()
+    # ==========================
+    # IDENTIFICAÇÃO QUÍMICA (MOLMASS) E REGRA DOS GASES
+    # ==========================
+    step_to_gas = {step: tune_modes[i] for i, step in enumerate(tune_steps_presentes)}
     
     def classificar_modo(row):
-        min_m = min_mass_dict.get(row['Analyte'], 0)
-        if row['Mass'] >= min_m + 15:
-            return "MASS-SHIFT"
-        else:
+        analito = row['Analyte']
+        massa_medida = int(row['Mass'])
+        gas_utilizado = step_to_gas.get(row['Tune Step'], "No Gas")
+        
+        # Só ocorre Mass-Shift real se houver gás reativo
+        if gas_utilizado not in ["O2", "NH3"]:
             return "ON MASS"
+        
+        try:
+            isotopos_naturais = list(ELEMENTS[analito].isotopes.keys())
+            if massa_medida in isotopos_naturais:
+                return "ON MASS"
+            else:
+                return "MASS-SHIFT"
+        except KeyError:
+            return "DESCONHECIDO"
             
     df['Modo'] = df.apply(classificar_modo, axis=1)
 
     # ==========================
-    # FILTROS PRINCIPAIS
+    # FILTROS PRINCIPAIS (COM CONVERSÃO DE UNIDADES)
     # ==========================
-    st.write("# Resultados")
-    
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         modos_disponiveis = sorted(df['Modo'].dropna().unique())
         selected_mode = st.selectbox("Modo de Leitura", modos_disponiveis)
         
-        # Extrai os elementos únicos e ordena pela Tabela Periódica
         analytes_unicos = df['Analyte'].dropna().unique().tolist()
         analytes_disponiveis = sorted(
             analytes_unicos, 
@@ -242,38 +441,59 @@ if uploaded_file is not None:
     
     with col2:
         istd_selecionado = st.multiselect(
-            "Remover Elemento(s) ISTD das Colunas", 
+            "Remover Elemento(s) ISTD", 
             options=analytes_disponiveis,
             default=['Hf'] if 'Hf' in analytes_disponiveis else [] 
         )
+        
+    with col3:
+        # O sistema assume que a base do PCLIMS é ppb.
+        unidade_desejada = st.selectbox("Unidade de Concentração", ["ppb (µg/L)", "ppm (mg/L)", "g/L"])
+
+    # Lógica Matemática da Conversão assumindo base = ppb
+    def obter_fator(alvo):
+        fatores = {
+            "ppb (µg/L)": 1.0,       
+            "ppm (mg/L)": 1e-3,      
+            "g/L": 1e-6              
+        }
+        return fatores.get(alvo, 1.0)
+
+    fator_multiplicacao = obter_fator(unidade_desejada)
+
+    # Mapeamento do Título da Unidade
+    mapa_siglas = {
+        "ppb (µg/L)": "ppb",
+        "ppm (mg/L)": "ppm",
+        "g/L": "g/L"
+    }
+    sigla_titulo = mapa_siglas[unidade_desejada]
 
     # ==========================
     # PROCESSAMENTO DA TABELA POR TUNE STEP
     # ==========================
-    
     df_filtered = df[df['Modo'] == selected_mode].copy()
+    
+    # Aplica a conversão matemática 
+    if fator_multiplicacao != 1.0:
+        df_filtered['Concentration'] = df_filtered['Concentration'] * fator_multiplicacao
     
     if istd_selecionado:
         df_filtered = df_filtered[~df_filtered['Analyte'].isin(istd_selecionado)]
         
     if not df_filtered.empty:
-        # Coluna combinada (Símbolo + Massa)
         df_filtered['Analyte_Mass'] = df_filtered.apply(
             lambda x: f"{x['Analyte']} ({int(x['Mass'])})" if pd.notnull(x['Mass']) else x['Analyte'], 
             axis=1
         )
         
-        # Iterar sobre cada Tune Step detectado para gerar tabelas separadas
         for i, step in enumerate(tune_steps_presentes):
-            # O nome do gás que o usuário selecionou lá em cima
             nome_tune = tune_modes[i]
-                
             df_step = df_filtered[df_filtered['Tune Step'] == step]
             
             if df_step.empty:
                 continue
 
-            # Criação da Pivot Table para este Tune Step específico
             pivot_df = df_step.pivot_table(
                 index='Sample Name',
                 columns='Analyte_Mass',
@@ -283,9 +503,7 @@ if uploaded_file is not None:
             
             pivot_df.columns.name = None 
             
-            # ==========================================
-            # ORDENAÇÃO DAS COLUNAS PELA TABELA PERIÓDICA
-            # ==========================================
+            # Ordenação Tabela Periódica
             colunas_elementos = [col for col in pivot_df.columns if col != 'Sample Name']
             
             def extrair_simbolo(col_name):
@@ -298,25 +516,32 @@ if uploaded_file is not None:
                 return 999
                 
             colunas_ordenadas_quimicamente = sorted(colunas_elementos, key=obter_indice_periodico)
-            colunas_finais = ['Sample Name'] + colunas_ordenadas_quimicamente
-            pivot_df = pivot_df[colunas_finais]
+            pivot_df = pivot_df[['Sample Name'] + colunas_ordenadas_quimicamente]
             
-            # ==========================================
-            
-            # Exibe a tabela e o botão com identificações únicas
-            st.write(f"## {nome_tune} (Tune Step {int(step)}) | Modo: {selected_mode}")
+            # Título de exibição com a unidade
+            st.subheader(f"Resultados - {nome_tune} (Tune Step {int(step)}) | Modo: {selected_mode} | Unidades: {sigla_titulo}")
             
             st.dataframe(pivot_df, use_container_width=True)
             
-            # Nome do arquivo customizado: NomeOriginal_Gás_Modo.csv
-            nome_arquivo_exportacao = f"{original_name}_{nome_tune}_{selected_mode}.csv"
+            # ==========================
+            # EXPORTAÇÃO PARA EXCEL (.xlsx)
+            # ==========================
+            nome_arquivo_exportacao = f"{original_name}_{nome_tune}_{selected_mode}_{sigla_titulo}.xlsx"
             
-            csv_export = pivot_df.to_csv(index=False, sep=';', decimal=',').encode('utf-8')
+            # Cria um buffer na memória para o arquivo Excel
+            buffer = io.BytesIO()
+            
+            # Usa o pandas com engine openpyxl para gerar o Excel
+            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                pivot_df.to_excel(writer, index=False, sheet_name=f"{nome_tune}")
+            
+            excel_data = buffer.getvalue()
+            
             st.download_button(
-                label=f"📥 Baixar Tabela ({nome_tune})",
-                data=csv_export,
+                label=f"📥 Baixar Tabela em Excel ({nome_tune} - {sigla_titulo})",
+                data=excel_data,
                 file_name=nome_arquivo_exportacao,
-                mime="text/csv",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 key=f"download_btn_step_{int(step)}_{selected_mode}" 
             )
             
